@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2D Oyun Örneği</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background-color: #222;
+            touch-action: manipulation;
+        }
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+        }
+        #gameCanvas {
+            width: 100%;
+            border: 2px solid #444;
+            background-size: cover;
+            background-position: center;
+            touch-action: none;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 18px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+        #coins {
+            position: absolute;
+            top: 35px;
+            left: 10px;
+            font-size: 18px;
+            color: gold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+        #totalCoins {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            font-size: 14px;
+            color: gold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            color: red;
+            display: none;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            width: 90%;
+        }
+        #restartButton {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            font-size: 18px;
+            display: none;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            z-index: 10;
+        }
+        #soundToggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        #shopButton {
+            position: absolute;
+            top: 45px;
+            right: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        #powerButton {
+            position: absolute;
+            top: 80px;
+            right: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+        }
+        #shopMenu {
+            position: absolute;
+            width: 90%;
+            max-width: 320px;
+            height: 70vh;
+            max-height: 450px;
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 2px solid #444;
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 10px;
+            color: white;
+            z-index: 100;
+        }
+        .colorOption {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            cursor: pointer;
+            border: 2px solid #444;
+            display: inline-block;
+            border-radius: 50%;
+        }
+        .powerOption {
+            width: 100%;
+            padding: 8px;
+            cursor: pointer;
+            border: 2px solid #444;
+            display: flex;
+            align-items: center;
+            border-radius: 5px;
+            background-color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .powerIcon {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+        .powerInfo {
+            flex-grow: 1;
+        }
+        .powerName {
+            font-weight: bold;
+        }
+        .powerDesc {
+            font-size: 11px;
+            color: #aaa;
+        }
+        .colorPrice, .powerPrice {
+            display: inline-block;
+            margin-left: 8px;
+            color: gold;
+            font-size: 14px;
+        }
+        .shopItem {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        #closeShop {
+            align-self: flex-end;
+            cursor: pointer;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+        }
+        #powerTimer {
+            position: absolute;
+            top: 110px;
+            right: 10px;
+            font-size: 14px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            display: none;
+        }
+        .scorePopup {
+            position: absolute;
+            font-size: 20px;
+            color: gold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            animation: floatUp 0.5s forwards;
+            pointer-events: none;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+        #powerIndicator {
+            position: absolute;
+            top: 80px;
+            right: 10px;
+            font-size: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            display: none;
+        }
+        #giftPopup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: gold;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            text-align: center;
+            z-index: 100;
+            width: 80%;
+        }
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 100;
+        }
+        .purchasePopup {
+            position: absolute;
+            font-size: 20px;
+            color: red;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            animation: floatUp 0.5s forwards;
+            pointer-events: none;
+            z-index: 100;
+        }
+        #highScore {
+            position: absolute;
+            top: 85px;
+            left: 10px;
+            font-size: 14px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+        #finalScore, #finalHighScore {
+            font-size: 20px;
+            display: block;
+            margin: 8px 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+        #shopTotalCoins {
+            text-align: center;
+            margin-bottom: 10px;
+            color: gold;
+            font-size: 16px;
+        }
+        .invisiblePlayer {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            border: 2px dashed white;
+            pointer-events: none;
+            display: none;
+        }
+        /* Dokunmatik kontroller */
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 5;
+        }
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 10px;
+            font-size: 24px;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        #upBtn {
+            position: absolute;
+            bottom: 80px;
+        }
+        #leftRightContainer {
+            display: flex;
+            gap: 20px;
+        }
+        /* Mobil cihazlar için özel stiller */
+        @media (max-width: 600px) {
+            #gameCanvas {
+                height: 80vh;
+            }
+            .control-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            #upBtn {
+                bottom: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="score">Skor: 0</div>
+        <div id="coins">Paralar: 0</div>
+        <div id="totalCoins">Toplam Para: 0</div>
+        <div id="highScore">En Yüksek Skor: 0</div>
+        <div id="powerTimer"></div>
+        <div id="powerIndicator">👻</div>
+        <div id="countdown"></div>
+        <div id="gameOver">
+            OYUN BİTTİ!<br>
+            <span id="finalScore">Skor: 0</span>
+            <span id="finalHighScore">En Yüksek Skor: 0</span>
+        </div>
+        <button id="restartButton">Yeniden Başlat (SPACE)</button>
+        <button id="soundToggle">Sesi Kapat</button>
+        <button id="shopButton">Mağaza</button>
+        <button id="powerButton">Güç Kullan (G)</button>
+        <div id="shopMenu">
+            <span id="closeShop">X</span>
+            <h2 style="text-align: center; margin-bottom: 15px;">MAĞAZA</h2>
+            <div id="shopTotalCoins">Toplam Paranız: <span id="shopTotalCoinsValue">0</span></div>
+            <div id="shopItems">
+                <!-- Tüm mağaza öğeleri buraya eklenecek -->
+            </div>
+        </div>
+        <div id="giftPopup"></div>
+        <div id="invisiblePlayer" class="invisiblePlayer"></div>
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- Dokunmatik kontroller -->
+        <div id="controls">
+            <div id="leftRightContainer">
+                <div class="control-btn" id="leftBtn">←</div>
+                <div class="control-btn" id="rightBtn">→</div>
+            </div>
+            <div class="control-btn" id="upBtn">↑</div>
+            <div class="control-btn" id="downBtn">↓</div>
+            <div class="control-btn" id="powerBtn" style="display: none;">G</div>
+        </div>
+    </div>
+
+    <script>
+        // Canvas ve context ayarları
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Canvas boyutlarını ayarla
+        function resizeCanvas() {
+            const size = Math.min(window.innerWidth, window.innerHeight * 1.2);
+            canvas.width = size;
+            canvas.height = size;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        const scoreElement = document.getElementById('score');
+        const coinsElement = document.getElementById('coins');
+        const totalCoinsElement = document.getElementById('totalCoins');
+        const highScoreElement = document.getElementById('highScore');
+        const gameOverElement = document.getElementById('gameOver');
+        const finalScoreElement = document.getElementById('finalScore');
+        const finalHighScoreElement = document.getElementById('finalHighScore');
+        const restartButton = document.getElementById('restartButton');
+        const soundToggle = document.getElementById('soundToggle');
+        const shopButton = document.getElementById('shopButton');
+        const powerButton = document.getElementById('powerButton');
+        const powerTimer = document.getElementById('powerTimer');
+        const powerIndicator = document.getElementById('powerIndicator');
+        const shopMenu = document.getElementById('shopMenu');
+        const closeShop = document.getElementById('closeShop');
+        const shopItems = document.getElementById('shopItems');
+        const shopTotalCoinsElement = document.getElementById('shopTotalCoinsValue');
+        const giftPopup = document.getElementById('giftPopup');
+        const countdownElement = document.getElementById('countdown');
+        const invisiblePlayer = document.getElementById('invisiblePlayer');
+        
+        // Dokunmatik kontroller
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const upBtn = document.getElementById('upBtn');
+        const downBtn = document.getElementById('downBtn');
+        const powerBtn = document.getElementById('powerBtn');
+
+        // Arka plan resmi
+        const backgroundImage = new Image();
+        backgroundImage.src = 'https://sdmntprpolandcentral.oaiusercontent.com/files/00000000-6e98-620a-b827-816720d7d481/raw?se=2025-07-06T14%3A18%3A18Z&sp=r&sv=2024-08-04&sr=b&scid=58392485-53fb-554f-8b61-fe9467fb2c6a&skoid=eb780365-537d-4279-a878-cae64e33aa9c&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-07-06T06%3A35%3A24Z&ske=2025-07-07T06%3A35%3A24Z&sks=b&skv=2024-08-04&sig=o4%2BOnWsbpV2b4coJRe4LELWhKeArACAqeXMID9wr8oY%3D';
+        backgroundImage.onload = function() {
+            canvas.style.backgroundImage = `url(${backgroundImage.src})`;
+        };
+
+        // Ses efektleri
+        const sounds = {
+            background: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-game-show-suspense-waiting-668.mp3'),
+            collision: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-explosion-2759.mp3'),
+            score: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3'),
+            coin: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-coins-handling-1939.mp3'),
+            powerup: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-magic-potion-music-and-fx-2831.mp3'),
+            gift: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-bonus-earned-in-video-game-2058.mp3'),
+            countdown: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-simple-countdown-921.mp3')
+        };
+
+        // Ses ayarları
+        let soundEnabled = true;
+        sounds.background.loop = true;
+
+        // Oyun değişkenleri
+        let score = 0;
+        let coins = 0;
+        let totalCoins = parseInt(localStorage.getItem('totalCoins')) || 0;
+        let highScore = parseInt(localStorage.getItem('highScore')) || 0;
+        let gameOver = false;
+        let animationId;
+        let scorePopups = [];
+        let purchasePopups = [];
+        let lastGiftTime = 0;
+        const giftInterval = 30000; // 30 saniyede bir hediye
+        let gameStarted = false;
+
+        // Oyuncu ayarları
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 30,
+            radius: 15,
+            color: 'yellow',
+            speed: 5,
+            dx: 0,
+            dy: 0,
+            isInvisible: false,
+            invisibilityTime: 0,
+            maxInvisibilityTime: 5000 // 5 saniye
+        };
+
+        // Engel ayarları
+        const obstacles = [];
+        const obstacleSettings = {
+            width: 50,
+            height: 20,
+            color: 'rgba(255, 0, 0, 0.7)',
+            speed: 3,
+            spawnRate: 60 // frames
+        };
+        let obstacleSpawnCounter = 0;
+
+        // Mağaza öğeleri
+        const shopItemsList = [
+            { 
+                type: 'color',
+                name: 'Sarı', 
+                value: 'yellow', 
+                price: 0, 
+                owned: true,
+                icon: '●',
+                color: 'yellow'
+            },
+            { 
+                type: 'color',
+                name: 'Mavi', 
+                value: 'blue', 
+                price: 100, 
+                owned: false,
+                icon: '●',
+                color: 'blue'
+            },
+            { 
+                type: 'color',
+                name: 'Kırmızı', 
+                value: 'red', 
+                price: 100, 
+                owned: false,
+                icon: '●',
+                color: 'red'
+            },
+            { 
+                type: 'color',
+                name: 'Yeşil', 
+                value: 'green', 
+                price: 100, 
+                owned: false,
+                icon: '●',
+                color: 'green'
+            },
+            { 
+                type: 'color',
+                name: 'Pembe', 
+                value: 'pink', 
+                price: 100, 
+                owned: false,
+                icon: '●',
+                color: 'pink'
+            },
+            { 
+                type: 'color',
+                name: 'Mor', 
+                value: 'purple', 
+                price: 100, 
+                owned: false,
+                icon: '●',
+                color: 'purple'
+            },
+            { 
+                type: 'color',
+                name: 'Turuncu', 
+                value: 'orange', 
+                price: 150, 
+                owned: false,
+                icon: '●',
+                color: 'orange'
+            },
+            { 
+                type: 'color',
+                name: 'Beyaz', 
+                value: 'white', 
+                price: 200, 
+                owned: false,
+                icon: '●',
+                color: 'white'
+            },
+            { 
+                type: 'power',
+                name: 'Görünmezlik', 
+                value: 'invisibility', 
+                price: 500, 
+                owned: false, 
+                quantity: parseInt(localStorage.getItem('powerQuantity')) || 0, 
+                icon: '👻',
+                description: '5 saniye boyunca engellere çarpmazsınız'
+            }
+        ];
+
+        // En yüksek skoru güncelle
+        function updateHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('highScore', highScore);
+                highScoreElement.textContent = `En Yüksek Skor: ${highScore}`;
+                finalHighScoreElement.textContent = `En Yüksek Skor: ${highScore}`;
+            }
+        }
+
+        // Mağazayı oluştur
+        function createShop() {
+            shopItems.innerHTML = '';
+            shopTotalCoinsElement.textContent = totalCoins;
+            
+            shopItemsList.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'shopItem';
+                
+                if (item.type === 'color') {
+                    itemDiv.innerHTML = `
+                        <div class="colorOption" style="background-color: ${item.color}; color: ${item.color === 'white' ? 'black' : 'white'}">${item.icon}</div>
+                        <span>${item.name}</span>
+                        <span class="colorPrice">
+                            ${item.owned ? 
+                                (item.value === player.color ? 'SEÇİLİ' : '<button onclick="selectColor(\'' + item.value + '\')">SEÇ</button>') : 
+                                '<button onclick="buyItem(' + shopItemsList.indexOf(item) + ')" ' + (totalCoins >= item.price ? '' : 'disabled') + '>' + item.price + ' Para</button>'}
+                        </span>
+                    `;
+                } else if (item.type === 'power') {
+                    itemDiv.className = 'powerOption';
+                    itemDiv.innerHTML = `
+                        <div class="powerIcon">${item.icon}</div>
+                        <div class="powerInfo">
+                            <div class="powerName">${item.name}</div>
+                            <div class="powerDesc">${item.description}</div>
+                            <div class="powerPrice">${item.price} Para (${item.quantity} adet)</div>
+                        </div>
+                        ${totalCoins >= item.price ? `<button onclick="buyItem(${shopItemsList.indexOf(item)})">SATIN AL</button>` : '<button disabled>SATIN AL</button>'}
+                    `;
+                }
+                
+                shopItems.appendChild(itemDiv);
+            });
+        }
+
+        // Öğe satın alma
+        function buyItem(index) {
+            const item = shopItemsList[index];
+            
+            if (totalCoins >= item.price) {
+                // Para düşüşünü göster
+                const shopRect = shopMenu.getBoundingClientRect();
+                const popupX = shopRect.left + shopRect.width / 2;
+                const popupY = shopRect.top + 50;
+                createPurchasePopup(popupX, popupY, `-${item.price}`);
+                
+                totalCoins -= item.price;
+                localStorage.setItem('totalCoins', totalCoins);
+                
+                if (item.type === 'color') {
+                    item.owned = true;
+                    selectColor(item.value);
+                } else if (item.type === 'power') {
+                    item.quantity += 1;
+                    localStorage.setItem('powerQuantity', item.quantity);
+                    
+                    // Güç butonunu göster
+                    if (item.quantity > 0) {
+                        powerButton.style.display = 'block';
+                        powerBtn.style.display = 'flex';
+                    }
+                }
+                
+                totalCoinsElement.textContent = `Toplam Para: ${totalCoins}`;
+                shopTotalCoinsElement.textContent = totalCoins;
+                createShop();
+                
+                if (soundEnabled) {
+                    sounds.coin.currentTime = 0;
+                    sounds.coin.play();
+                }
+            }
+        }
+
+        // Satın alma popup'ı oluştur
+        function createPurchasePopup(x, y, amount) {
+            const popup = document.createElement('div');
+            popup.className = 'purchasePopup';
+            popup.textContent = amount;
+            popup.style.left = `${x}px`;
+            popup.style.top = `${y}px`;
+            document.body.appendChild(popup);
+            
+            // Animasyon bitince kaldır
+            setTimeout(() => {
+                popup.remove();
+            }, 500);
+        }
+
+        // Renk seçme
+        function selectColor(colorValue) {
+            player.color = colorValue;
+            createShop();
+            if (soundEnabled) {
+                sounds.coin.currentTime = 0;
+                sounds.coin.play();
+            }
+        }
+
+        // Güç kullanma
+        function usePower() {
+            const power = shopItemsList.find(item => item.type === 'power' && item.value === 'invisibility');
+            
+            if (power && power.quantity > 0 && !player.isInvisible) {
+                power.quantity -= 1;
+                localStorage.setItem('powerQuantity', power.quantity);
+                player.isInvisible = true;
+                player.invisibilityTime = Date.now();
+                powerIndicator.style.display = 'block';
+                invisiblePlayer.style.display = 'block';
+                updateInvisiblePlayerPosition();
+                
+                // Mağazayı güncelle
+                createShop();
+                
+                // Zamanlayıcıyı göster
+                powerTimer.style.display = 'block';
+                updatePowerTimer();
+                
+                if (soundEnabled) {
+                    sounds.powerup.currentTime = 0;
+                    sounds.powerup.play();
+                }
+                
+                // Eğer tüm güçler kullanıldıysa butonu gizle
+                if (power.quantity <= 0) {
+                    powerButton.style.display = 'none';
+                    powerBtn.style.display = 'none';
+                }
+            }
+        }
+
+        // Görünmez oyuncu pozisyonunu güncelle
+        function updateInvisiblePlayerPosition() {
+            invisiblePlayer.style.left = (player.x - player.radius) + 'px';
+            invisiblePlayer.style.top = (player.y - player.radius) + 'px';
+        }
+
+        // Güç zamanlayıcısını güncelle
+        function updatePowerTimer() {
+            if (player.isInvisible) {
+                const remainingTime = Math.max(0, player.maxInvisibilityTime - (Date.now() - player.invisibilityTime));
+                const seconds = Math.ceil(remainingTime / 1000);
+                powerTimer.textContent = `Görünmezlik: ${seconds}s`;
+                
+                if (remainingTime <= 0) {
+                    player.isInvisible = false;
+                    powerTimer.style.display = 'none';
+                    powerIndicator.style.display = 'none';
+                    invisiblePlayer.style.display = 'none';
+                } else {
+                    requestAnimationFrame(updatePowerTimer);
+                }
+            }
+        }
+
+        // Skor popup oluştur
+        function createScorePopup(x, y, amount) {
+            const popup = {
+                x: x,
+                y: y,
+                text: `+${amount}`,
+                opacity: 1,
+                life: 30 // frames
+            };
+            scorePopups.push(popup);
+        }
+
+        // Hediye göster
+        function showGift(amount) {
+            giftPopup.textContent = `SÜRPRİZ HEDİYE! +${amount} Para!`;
+            giftPopup.style.display = 'block';
+            
+            if (soundEnabled) {
+                sounds.gift.currentTime = 0;
+                sounds.gift.play();
+            }
+            
+            setTimeout(() => {
+                giftPopup.style.display = 'none';
+            }, 3000);
+        }
+
+        // Rastgele hediye ver
+        function giveRandomGift() {
+            const now = Date.now();
+            if (now - lastGiftTime > giftInterval) {
+                lastGiftTime = now;
+                const giftAmount = Math.floor(Math.random() * 100) + 50; // 50-150 arası rastgele para
+                coins += giftAmount;
+                coinsElement.textContent = `Paralar: ${coins}`;
+                showGift(giftAmount);
+            }
+        }
+
+        // Skor popupları çiz
+        function drawScorePopups() {
+            for (let i = scorePopups.length - 1; i >= 0; i--) {
+                const popup = scorePopups[i];
+                ctx.font = '24px Arial';
+                ctx.fillStyle = `rgba(255, 215, 0, ${popup.opacity})`;
+                ctx.textAlign = 'center';
+                ctx.fillText(popup.text, popup.x, popup.y);
+                
+                popup.y -= 1;
+                popup.opacity -= 0.033;
+                popup.life--;
+                
+                if (popup.life <= 0) {
+                    scorePopups.splice(i, 1);
+                }
+            }
+        }
+
+        // Geri sayım yap
+        function startCountdown() {
+            let count = 3;
+            countdownElement.style.display = 'block';
+            
+            if (soundEnabled) {
+                sounds.countdown.currentTime = 0;
+                sounds.countdown.play();
+            }
+            
+            const countdownInterval = setInterval(() => {
+                if (count > 0) {
+                    countdownElement.textContent = count;
+                    count--;
+                } else {
+                    countdownElement.textContent = "BAŞLA!";
+                    setTimeout(() => {
+                        countdownElement.style.display = 'none';
+                        gameStarted = true;
+                        if (soundEnabled) {
+                            sounds.background.play().catch(e => console.log("Otomatik oynatma engellendi"));
+                        }
+                        draw();
+                    }, 1000);
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        }
+
+        // Mağazayı aç/kapat
+        shopButton.addEventListener('click', () => {
+            shopMenu.style.display = 'flex';
+            shopTotalCoinsElement.textContent = totalCoins;
+            createShop();
+            cancelAnimationFrame(animationId);
+        });
+
+        closeShop.addEventListener('click', () => {
+            shopMenu.style.display = 'none';
+            if (!gameOver && gameStarted) {
+                draw();
+            }
+        });
+
+        // Güç butonu
+        powerButton.addEventListener('click', usePower);
+        powerBtn.addEventListener('click', usePower);
+
+        // Yeniden başlat butonu
+        restartButton.addEventListener('click', () => {
+            resetGame();
+        });
+
+        // Ses toggle butonu
+        soundToggle.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            soundToggle.textContent = soundEnabled ? "Sesi Kapat" : "Sesi Aç";
+            
+            if (soundEnabled) {
+                sounds.background.play().catch(e => console.log("Otomatik oynatma engellendi"));
+            } else {
+                sounds.background.pause();
+                sounds.countdown.pause();
+            }
+        });
+
+        // Dokunmatik kontroller için olay dinleyicileri
+        function setupTouchControls() {
+            // Sol buton
+            leftBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                player.dx = -player.speed;
+            });
+            
+            leftBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                if (player.dx < 0) player.dx = 0;
+            });
+            
+            // Sağ buton
+            rightBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                player.dx = player.speed;
+            });
+            
+            rightBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                if (player.dx > 0) player.dx = 0;
+            });
+            
+            // Yukarı buton
+            upBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                player.dy = -player.speed;
+            });
+            
+            upBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                if (player.dy < 0) player.dy = 0;
+            });
+            
+            // Aşağı buton
+            downBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                player.dy = player.speed;
+            });
+            
+            downBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                if (player.dy > 0) player.dy = 0;
+            });
+            
+            // Dokunmatik kaydırma kontrolleri
+            let touchStartX = 0;
+            let touchStartY = 0;
+            
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (!gameStarted || gameOver) return;
+                
+                const touchX = e.touches[0].clientX;
+                const touchY = e.touches[0].clientY;
+                
+                // X ekseni hareketi
+                if (Math.abs(touchX - touchStartX) > 10) {
+                    player.x = touchX - canvas.getBoundingClientRect().left;
+                }
+                
+                // Y ekseni hareketi
+                if (Math.abs(touchY - touchStartY) > 10) {
+                    player.y = touchY - canvas.getBoundingClientRect().top;
+                }
+                
+                // Sınır kontrolü
+                if (player.x - player.radius < 0) player.x = player.radius;
+                if (player.x + player.radius > canvas.width) player.x = canvas.width - player.radius;
+                if (player.y - player.radius < 0) player.y = player.radius;
+                if (player.y + player.radius > canvas.height) player.y = canvas.height - player.radius;
+            });
+            
+            canvas.addEventListener('touchend', (e) => {
+                e.preventDefault();
+            });
+        }
+
+        // Kontroller
+        document.addEventListener('keydown', keyDownHandler);
+        document.addEventListener('keyup', keyUpHandler);
+
+        function keyDownHandler(e) {
+            if (gameStarted && !gameOver) {
+                if (e.key === 'Right' || e.key === 'ArrowRight') {
+                    player.dx = player.speed;
+                } else if (e.key === 'Left' || e.key === 'ArrowLeft') {
+                    player.dx = -player.speed;
+                } else if (e.key === 'Up' || e.key === 'ArrowUp') {
+                    player.dy = -player.speed;
+                } else if (e.key === 'Down' || e.key === 'ArrowDown') {
+                    player.dy = player.speed;
+                } else if (e.key === 'g' || e.key === 'G') {
+                    usePower();
+                }
+            }
+            
+            // Space tuşuyla yeniden başlat
+            if (e.key === ' ' && gameOver) {
+                resetGame();
+            }
+        }
+
+        function keyUpHandler(e) {
+            if (e.key === 'Right' || e.key === 'ArrowRight' || e.key === 'Left' || e.key === 'ArrowLeft') {
+                player.dx = 0;
+            }
+            if (e.key === 'Up' || e.key === 'ArrowUp' || e.key === 'Down' || e.key === 'ArrowDown') {
+                player.dy = 0;
+            }
+        }
+
+        // Oyuncu çizimi
+        function drawPlayer() {
+            if (!player.isInvisible) {
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+                ctx.fillStyle = player.color;
+                ctx.fill();
+                ctx.closePath();
+                
+                // Oyuncuya hafif bir gölge efekti ekleyelim
+                ctx.beginPath();
+                ctx.arc(player.x, player.y + 2, player.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        // Engel oluşturma
+        function createObstacle() {
+            const x = Math.random() * (canvas.width - obstacleSettings.width);
+            const y = 0;
+            obstacles.push({ x, y, ...obstacleSettings });
+        }
+
+        // Engelleri çizme
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                // Engel gölgesi
+                ctx.beginPath();
+                ctx.rect(obstacle.x, obstacle.y + 3, obstacle.width, obstacle.height);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.fill();
+                ctx.closePath();
+                
+                // Engel kendisi
+                ctx.beginPath();
+                ctx.rect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                ctx.fillStyle = obstacle.color;
+                ctx.fill();
+                ctx.closePath();
+            });
+        }
+
+        // Çarpışma kontrolü
+        function checkCollision() {
+            if (player.isInvisible) return false; // Görünmezken çarpışma olmaz
+            
+            let collided = false;
+            obstacles.forEach(obstacle => {
+                // Basit çarpışma tespiti
+                if (
+                    player.x + player.radius > obstacle.x &&
+                    player.x - player.radius < obstacle.x + obstacle.width &&
+                    player.y + player.radius > obstacle.y &&
+                    player.y - player.radius < obstacle.y + obstacle.height
+                ) {
+                    collided = true;
+                }
+            });
+            
+            if (collided) {
+                gameOver = true;
+                gameStarted = false;
+                totalCoins += coins; // Öldüğünde paraları toplam paraya ekle
+                localStorage.setItem('totalCoins', totalCoins);
+                updateHighScore();
+                finalScoreElement.textContent = `Skor: ${score}`;
+                finalHighScoreElement.textContent = `En Yüksek Skor: ${highScore}`;
+                if (soundEnabled) {
+                    sounds.collision.currentTime = 0;
+                    sounds.collision.play();
+                    sounds.background.pause();
+                }
+            }
+        }
+
+        // Oyun sıfırlama
+        function resetGame() {
+            score = 0;
+            coins = 0;
+            obstacles.length = 0;
+            scorePopups = [];
+            purchasePopups = [];
+            player.x = canvas.width / 2;
+            player.y = canvas.height - 30;
+            player.dx = 0;
+            player.dy = 0;
+            player.isInvisible = false;
+            gameOver = false;
+            gameOverElement.style.display = 'none';
+            restartButton.style.display = 'none';
+            powerTimer.style.display = 'none';
+            powerIndicator.style.display = 'none';
+            invisiblePlayer.style.display = 'none';
+            scoreElement.textContent = 'Skor: 0';
+            coinsElement.textContent = 'Paralar: 0';
+            totalCoinsElement.textContent = `Toplam Para: ${totalCoins}`;
+            highScoreElement.textContent = `En Yüksek Skor: ${highScore}`;
+            obstacleSettings.speed = 3;
+            obstacleSettings.spawnRate = 60;
+            lastGiftTime = Date.now();
+            
+            // Güç butonunu kontrol et
+            const power = shopItemsList.find(item => item.type === 'power');
+            if (power && power.quantity > 0) {
+                powerButton.style.display = 'block';
+                powerBtn.style.display = 'flex';
+            } else {
+                powerButton.style.display = 'none';
+                powerBtn.style.display = 'none';
+            }
+            
+            // Mağazayı yenile
+            createShop();
+            
+            // Geri sayımı başlat
+            startCountdown();
+        }
+
+        // Oyun güncelleme
+        function update() {
+            // Oyuncu hareketi
+            player.x += player.dx;
+            player.y += player.dy;
+
+            // Sınır kontrolü
+            if (player.x - player.radius < 0) player.x = player.radius;
+            if (player.x + player.radius > canvas.width) player.x = canvas.width - player.radius;
+            if (player.y - player.radius < 0) player.y = player.radius;
+            if (player.y + player.radius > canvas.height) player.y = canvas.height - player.radius;
+
+            // Görünmez oyuncu pozisyonunu güncelle
+            if (player.isInvisible) {
+                updateInvisiblePlayerPosition();
+            }
+
+            // Görünmezlik süresi kontrolü
+            if (player.isInvisible && Date.now() - player.invisibilityTime > player.maxInvisibilityTime) {
+                player.isInvisible = false;
+                powerTimer.style.display = 'none';
+                powerIndicator.style.display = 'none';
+                invisiblePlayer.style.display = 'none';
+            }
+
+            // Engel hareketi
+            obstacles.forEach(obstacle => {
+                obstacle.y += obstacle.speed;
+            });
+
+            // Ekran dışına çıkan engelleri kaldırma
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                if (obstacles[i].y > canvas.height) {
+                    const obstacle = obstacles[i];
+                    obstacles.splice(i, 1);
+                    score++;
+                    coins += 5; // Her engel için 5 para kazan
+                    scoreElement.textContent = `Skor: ${score}`;
+                    coinsElement.textContent = `Paralar: ${coins}`;
+                    
+                    // +5 popup göster
+                    createScorePopup(obstacle.x + obstacle.width/2, canvas.height - 20, 5);
+                    
+                    // Her 20 skorda hızı artır
+                    if (score > 0 && score % 20 === 0) {
+                        obstacleSettings.speed += 0.3;
+                    }
+                    
+                    if (soundEnabled) {
+                        sounds.score.currentTime = 0;
+                        sounds.score.play();
+                    }
+                }
+            }
+
+            // Yeni engel oluşturma
+            obstacleSpawnCounter++;
+            if (obstacleSpawnCounter >= obstacleSettings.spawnRate) {
+                createObstacle();
+                obstacleSpawnCounter = 0;
+            }
+
+            // Rastgele hediye ver
+            giveRandomGift();
+
+            // Çarpışma kontrolü
+            checkCollision();
+        }
+
+        // Oyun çizimi
+        function draw() {
+            // Ekranı temizle (yarı saydam arka plan)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Oyuncu ve engelleri çiz
+            drawPlayer();
+            drawObstacles();
+            drawScorePopups();
+
+            if (!gameOver && gameStarted) {
+                update();
+                animationId = requestAnimationFrame(draw);
+            } else if (gameOver) {
+                gameOverElement.style.display = 'block';
+                restartButton.style.display = 'block';
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+
+        // Oyunu başlat
+        highScoreElement.textContent = `En Yüksek Skor: ${highScore}`;
+        totalCoinsElement.textContent = `Toplam Para: ${totalCoins}`;
+        createShop();
+        setupTouchControls(); // Dokunmatik kontrolleri ayarla
+        resetGame();
+    </script>
+</body>
+</html>
